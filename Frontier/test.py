@@ -10,8 +10,8 @@ def do_stuff():
 	try:
 		PORT_INDEX = 0
 		while True:
-			HOST = 'localhost'                  # The remote host
-			PORTS = [8888,8889,8890,8891,8892]  # The same port as used by the server
+			HOST = 'helix.vis.uky.edu'                  # The remote host
+			PORTS = [8888]  # The same port as used by the server
 			success = True
 			try:
 				s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
