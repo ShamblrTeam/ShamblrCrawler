@@ -248,7 +248,7 @@ if __name__ == "__main__":
 	try:
 
 		blogs_visited = 0
-		host = 'localhost'
+		host = 'helix.vis.uky.edu'
 		port = 8888
 
 		#first send a starting blog to the frontier

@@ -67,7 +67,10 @@ def worker(thread_number,socket_number):
 			print ("Data Recieved: ",data)
 
 		#turn those bytes into a json request
-		json_data = json.loads(data)
+		try:
+			json_data = json.loads(data)
+		except Exception as e:
+			print ("Failed to parse JSON")
 
 		#check to make sure the request has a type 
 		if "request_type" in json_data:
@@ -249,7 +252,15 @@ def main(socket_num):
 				if not new_data: break
 				data += new_data
 			data = str(data,'UTF-8')
-			json_data = json.loads(data)
+			try:
+				json_data = json.loads(data)
+			except Exception as e:
+				print ("Failed to parse JSON")
+				conn.shutdown(socket.SHUT_WR)
+				conn.close()
+				conn = None
+				s = None
+				continue
 
 			#check to make sure there is a request
 			if "request_type" in json_data:
@@ -311,7 +322,7 @@ def main(socket_num):
 	# or socket accessor
 	finally:
 		print("Hash Table Length: " + str(len(hash_table)))
-		print("Queue Length: " + str(len(frontier_queue)))
+		print("Queue Length: " + int(frontier_queue.qsize()))
 		if conn != None:
 			conn.close()
 
