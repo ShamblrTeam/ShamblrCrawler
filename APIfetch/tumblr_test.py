@@ -10,8 +10,30 @@ import random
 import time
 
 # the tumblr api key
-my_api_key = "GVL9W0CL6PlLFo4WX1PiL541vsRngVpa7CRBsKClp0maIK3lie"
+#my_api_key = "GVL9W0CL6PlLFo4WX1PiL541vsRngVpa7CRBsKClp0maIK3lie"
 
+#The global variable for API Key List and count how many key we have for wrap around once get to the end
+#Also keep track of how many API key have been requested to determine which key to hand out.
+API_KEY_LIST = []
+API_KEY_COUNT=0
+API_KEY_Requested=0
+
+#load all API key from file to API_KEY_LIST, keep a count of total keys
+def load_api_key_list_from_file(filePath = "./API_KEY_LIST.data"):
+	global API_KEY_COUNT, API_KEY_LIST
+	API_KEY_RAW_DATA = open(filePath)
+	for API_KEY in API_KEY_RAW_DATA:
+		API_KEY_LIST.append(API_KEY)
+		API_KEY_COUNT+=1
+	print ("We have loaded " + str(API_KEY_COUNT) + " keys")
+
+#call this function to request the next API key for use
+def request_api_key_from_list():
+	global API_KEY_Requested, API_KEY_COUNT , API_KEY_LIST
+	#we keep a total count of how many keys have been requested and mod it with the total API key in the list
+	keyIndex = API_KEY_Requested % API_KEY_COUNT
+	API_KEY_Requested+=1
+	return API_KEY_LIST[keyIndex]
 
 #get a new blog from the frontier
 def get_blog_from_frontier(host,port):
@@ -245,6 +267,13 @@ def send_blogs_to_frontier(host,port,blogs):
 	return True
 
 if __name__ == "__main__":
+	load_api_key_list_from_file()
+
+#The testing code for API Picker, which go around the list and keep handing out API Key
+
+	for x in range(0,80):
+		print ("The " + str(x) + "key requested is " + request_api_key_from_list())
+"""
 	try:
 
 		blogs_visited = 0
@@ -289,7 +318,7 @@ if __name__ == "__main__":
 			insert_blogs = []
 			print("Get Notes From Tumblr")
 			while True:
-				ret,insert_blogs = get_blogs_from_notes(new_blog,my_api_key)
+				ret,insert_blogs = get_blogs_from_notes(new_blog,request_api_key_from_list())
 				if ret:
 					break
 				fail_count += 1
@@ -317,3 +346,4 @@ if __name__ == "__main__":
 
 	finally:
 		print("Ending: " + str(blogs_visited))
+"""
