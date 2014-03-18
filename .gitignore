@@ -34,3 +34,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+
+#API KEY LIST
+APIfetch/API_KEY_LIST.data
