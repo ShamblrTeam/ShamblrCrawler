@@ -212,13 +212,17 @@ def send_blogs_to_frontier(host,port,blogs):
 	s.send(str.encode(json.dumps({"request_type":"socket_request"})))
 	s.shutdown(socket.SHUT_WR)
 
-	#recieve the response
-	data = bytes([])
-	while True:
-		new_data = s.recv(1024)
-		if not new_data: break
-		data += new_data
-	s.close()
+	try:
+		#recieve the response
+		data = bytes([])
+		while True:
+			new_data = s.recv(1024)
+			if not new_data: break
+			data += new_data
+		s.close()
+	except Exception as e:
+		print("Socket Was Reset")
+		return False
 	try:
 		data = str(data,'UTF-8')
 	except Exception as e:
