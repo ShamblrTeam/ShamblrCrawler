@@ -72,6 +72,7 @@ def do_stuff():
 								json_data = json.loads(data)
 							print(json_data)
 							s.close()
+			sys.exit()
 	except Exception as e:
 		return True
 
