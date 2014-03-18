@@ -270,7 +270,7 @@ if __name__ == "__main__":
 	load_api_key_list_from_file()
 
 #The testing code for API Picker, which go around the list and keep handing out API Key
-
+"""
 	for x in range(0,80):
 		print ("The " + str(x) + "key requested is " + request_api_key_from_list())
 """
@@ -346,4 +346,3 @@ if __name__ == "__main__":
 
 	finally:
 		print("Ending: " + str(blogs_visited))
-"""
