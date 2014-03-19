@@ -171,7 +171,7 @@ def worker(thread_number,socket_number):
 					new_api_key = str(api_key_queue.get(timeout=.25))
 					send_data = {	"worked":True,
 									"request_type":"api_key_get",
-									"new_blog":new_api_key,
+									"new_api_key":new_api_key,
 								}
 					api_key_queue.put(new_api_key)
 				except Exception as e:
