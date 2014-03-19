@@ -38,4 +38,8 @@ nosetests.xml
 
 #API KEY LIST
 Frontier/API_KEY_LIST.data
+<<<<<<< HEAD
 Frontier/api-keys.json
+=======
+Froniter/api-keys.json
+>>>>>>> FETCH_HEAD
