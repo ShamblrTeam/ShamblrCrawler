@@ -360,7 +360,22 @@ if __name__ == "__main__":
 	except Exception as e:
 		print ("Could not get an API Key") 
 
-
+	try:
+		#first send a starting blog to the frontier
+		fail_count = 0
+		while True:
+			seed_blogs = ["just1boi"]
+			ret = send_blogs_to_frontier(host,port,seed_blogs)
+			if ret:
+				break
+			fail_count += 1
+			if fail_count > 10:
+				print("Failed on Send Blogs, Number of Blogs Visited: " + str(blogs_visited))
+				sys.exit()
+			time.sleep(.1)
+	except Exception as e:
+		print("Could not add to the queue")
+		sys.exit()
 
 	try:
 
