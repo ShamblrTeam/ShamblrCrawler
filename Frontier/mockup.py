@@ -349,7 +349,7 @@ def main(socket_num):
 	# or socket accessor
 	finally:
 		print("Hash Table Length: " + str(len(hash_table)))
-		print("Queue Length: " + int(frontier_queue.qsize()))
+		print("Queue Length: " + str(int(frontier_queue.qsize())))
 		if conn != None:
 			conn.close()
 
