@@ -26,7 +26,7 @@ def get_blog_from_frontier(host,port):
 			if connection_success_fails > 5:
 				print("Max Link Fails to socket " + str(port))
 				return False,None
-			time.sleep(random.randrange(.1,.5))
+			time.sleep(.1*random.randint(1,5))
 			pass
 
 	#send the json request for a socket
@@ -180,7 +180,7 @@ def send_blogs_to_frontier(host,port,blogs):
 			if connection_success_fails > 5:
 				print("Max Link Fails to socket " + str(port))
 				return False
-			time.sleep(random.randrange(.1,.5))
+			time.sleep(.1*random.randint(1,5))
 			pass
 
 	#send the json request for a socket
