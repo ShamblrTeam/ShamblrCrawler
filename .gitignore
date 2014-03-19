@@ -35,7 +35,5 @@ nosetests.xml
 .project
 .pydevproject
 
-
-#API KEY LIST
 Frontier/API_KEY_LIST.data
 Frontier/api-keys.json
