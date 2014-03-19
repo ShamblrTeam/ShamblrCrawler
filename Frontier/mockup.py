@@ -25,6 +25,12 @@ hash_table = set()
 #our frontier queue which handles queueing
 frontier_queue = queue.Queue()
 
+#our API Key Queue which handles our API Keys
+api_key_queue = queue.Queue()
+
+#Api key file location
+api_key_file_location = "API_KEY_LIST.data"
+
 #Handles if the program should print stuff
 verbose = True
 
@@ -153,6 +159,27 @@ def worker(thread_number,socket_number):
 								}
 
 				#send the message
+				conn.send(str.encode(json.dumps(send_data)))
+				conn.shutdown(socket.SHUT_WR)
+
+			#give a new api key
+			elif json_data["request_type"] == "api_key_get":
+
+				# take a new api key off of the queue and send it out
+				# then put it back on the stack
+				try:
+					new_api_key = str(api_key_queue.get(timeout=.25))
+					send_data = {	"worked":True,
+									"request_type":"api_key_get",
+									"new_blog":new_api_key,
+								}
+					api_key_queue.put(new_api_key)
+				except Exception as e:
+					#return no new key
+					send_data = {	"worked":False,
+									"request_type":"api_key_get",
+								}
+					pass
 				conn.send(str.encode(json.dumps(send_data)))
 				conn.shutdown(socket.SHUT_WR)
 
@@ -328,5 +355,7 @@ def main(socket_num):
 
 #this runs the program if it is the main program
 if __name__ == "__main__":
-	
+	#fill api key queue
+	for a in open(api_key_file_location,'r').readlines():
+		api_key_queue.put(a.strip('\n'))
 	main(8888)
