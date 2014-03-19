@@ -38,5 +38,5 @@ nosetests.xml
 
 #API KEY LIST
 Frontier/API_KEY_LIST.data
-Froniter/api-keys.json
+Frontier/api-keys.json
 
