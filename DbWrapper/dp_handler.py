@@ -69,7 +69,7 @@ def worker(thread_number,socket_number):
 					if len(blog_list) != len(link_list):
 						raise Exception
 					
-					#append these together into a list
+					# append these together into a list
 					for a in range(len(blog_list)):
 						insert_values.append({"name":blog_list[a],"link":link_list[a]})
 
@@ -77,14 +77,16 @@ def worker(thread_number,socket_number):
 					conn_string = "host='localhost' dbname='cs585' user='cs585' "
 					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
-					for a in insert_values:
-						try:
-							cursor.execute("insert into blog values(%s,%s);",(a["name"],a["link"]))
-							db_conn.commit()
-						except Exception as e:
-							db_conn.rollback()
-							pass
-					db_conn.commit()
+
+					# this is more efficient than commit a lot of transactions.
+					# @see: http://wiki.postgresql.org/wiki/Psycopg2_Tutorial
+					try:
+						cursor.executemany("""INSERT INTO blog VALUES (%(name)s, %(link)s)""", insert_values)
+						db_conn.commit()
+					except Exception as e:
+						db_conn.rollback()
+						pass
+
 					cursor.close()
 					db_conn.close()
 					send_data = {	"worked":True,
@@ -108,29 +110,22 @@ def worker(thread_number,socket_number):
 					conn_string = "host='localhost' dbname='cs585' user='cs585' "
 					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
-					for a in post_list:
-						try:
-							print (a)
-							t = time.gmtime(a["timestamp"])
-							print(t)
-							print (t.tm_year)
-							print (psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-							cursor.execute("insert into post values(%d,%s,%s,%s,%s,%s,%d);",
-									(	a["post_id"],
-										a["post_link"],
-										a["blog_name"],
-										a["type"],
-										a["content"][:500],
-										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
-										a["note_count"]
-									)
-								)
-							db_conn.commit()
-						except Exception as e:
-							print ("sdfsdfdsf" , str(e))
-							db_conn.rollback()
-							pass
-					db_conn.commit()
+
+
+					# add DB timestamps to posts
+					for a in range(len(post_list)):
+						t = post_list[a]["timestamp_created"]
+						post_list[a]["db_timestamp_created"] = psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
+
+					try:
+						cursor.executemany("""INSERT INTO post VALUES 
+							(%(post_id)d, %(link)s, %(blog_name)s, 
+							 %(type)s, %(content)s, %(db_timestamp_created)s, %(note_count)d)""", post_list)
+						db_conn.commit()
+					except Exception as e:
+						db_conn.rollback()
+						pass
+
 					cursor.close()
 					db_conn.close()
 					send_data = {	"worked":True,
