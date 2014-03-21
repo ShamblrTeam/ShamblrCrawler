@@ -116,18 +116,13 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 
 	def form_post(post):
 		formed_post = {}
-		try:
-			formed_post["blog_name"] = post["blog_name"]
-			formed_post["post_id"] = post["id"]
-			formed_post["timestamp"] = post["timestamp"]
-			formed_post["note_count"] = post["note_count"]
-			formed_post["tags"] = post["tags"]
-			formed_post["type"] = post["type"]
-		except Exception as e:
-			print(e)
-			print(formed_post)
-			print("FORM POST FAIL")
-			return False
+		formed_post["blog_name"] = post["blog_name"]
+		formed_post["post_id"] = post["id"]
+		formed_post["post_link"] = post["post_url"]
+		formed_post["timestamp"] = post["timestamp"]
+		formed_post["note_count"] = post["note_count"]
+		formed_post["tags"] = post["tags"]
+		formed_post["type"] = post["type"]
 		try:
 			if formed_post["type"] == "text":
 				formed_post["content"] = str(post["title"]) + str(post["body"])
