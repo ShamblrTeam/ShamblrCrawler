@@ -115,7 +115,7 @@ def worker(thread_number,socket_number):
 							print(t)
 							print (t.tm_year)
 							print (psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
-							cursor.execute("insert into post values(%d,%s,%s,%s,%s,%s,%d);",
+							cursor.execute("insert into post values(%s,%s,%s,%s,%s,%s,%s);",
 									(	a["post_id"],
 										a["post_link"],
 										a["blog_name"],
@@ -144,17 +144,43 @@ def worker(thread_number,socket_number):
 								}
 
 			elif json_data["request_type"] == "save_notes":
-				1
-				################
-				##
-				## 
-				##  DB Stuff goes here
-				##
-				##
-				################
+				
+				# get the blogs and the links from the request
+				try:
+					insert_values = []
+					post_list = json_data["notes"]
 
-				send_data = {	"worked":True,
-								"request_type":"save_notes",
+					#now build the db stuff and insert into the db
+					conn_string = "host='localhost' dbname='cs585' user='cs585' "
+					db_conn = psycopg2.connect(conn_string)
+					cursor = db_conn.cursor()
+					for a in note_list:
+						try:
+							print (a)
+							t = time.gmtime(a["timestamp"])
+							cursor.execute("insert into post values(%s,%s,%s,%s);",
+									(	a["post_id"],
+										a["type"],
+										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
+										a["blog_name"]
+									)
+								)
+							db_conn.commit()
+						except Exception as e:
+							print ("sdfsdfdsf" , str(e))
+							db_conn.rollback()
+							pass
+					db_conn.commit()
+					cursor.close()
+					db_conn.close()
+					send_data = {	"worked":True,
+								"request_type":"save_blogs",
+								}
+
+				except Exception as e:
+					print ("WOW: " + str(e))
+					send_data = {	"worked":False,
+								"request_type":"save_blogs",
 								}
 
 
