@@ -142,15 +142,35 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 			else:
 				raise Exception
 		except Exception as e:
+			#answer posts are going to be thrown out
 			print(formed_post)
 			print("Invalid post type found, something bad has happened")
 			return False
 		return formed_post
 
+	def get_notes_from_post(post,postid):
+		note_list = []
+		for item in post["notes"]:
+			note = {}
+			note["timestamp"] = item["timestamp"]
+			note["blog_name"] = item["blog_name"]
+			note["blog_url"] = item["blog_url"]
+			note["type"] = item["type"]
+			if note["type"] == "reblog":
+				note["post_id"] = item["post_id"]
+			else:
+				#just so we're clear, this is worthless for non reblog posts because every copy of the
+				#post has the same likes/replies/posted notes
+				note["post_id"] = postid
+			note_list += note
+		return note_list
+
+
 	#return list
 	blogs = []
 	links = []
 	posts = []
+	note_list = []
 
 	# build url for api
 	try:
@@ -164,7 +184,7 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		url += '/posts'+ authentication + parameters
 	except Exception as e:
 		print("Could not build")
-		return False,[],[],[]
+		return False,[],[],[],[]
 
 	# retrieve html
 	try:
@@ -172,14 +192,14 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		html = response.read()
 	except Exception as e:
 		print("Could not get Html",str(url))
-		return False,[],[],[]
+		return False,[],[],[],[]
 
 	# parse html into json
 	try:
 		x = json.loads(html.decode('UTF-8'))
 	except Exception as e:
 		print("Could not Parse to Json")
-		return False,[],[],[]
+		return False,[],[],[],[]
 
 	# look for "unique blogs"
 	try:
@@ -190,6 +210,7 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 					print(post)
 					if post != False:
 						posts.append(post)
+						note_list += get_notes_from_post(a,post["post_id"])
 					if "notes" in a:
 						for b in a["notes"]:
 							if "blog_name" in b:
@@ -198,10 +219,10 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 									links.append(b["blog_url"])
 	except Exception as e:
 		print("Could Not Parse Json into Unique Blogs")
-		return False,[],[],[]
+		return False,[],[],[],[]
 
 	# return list of unique blogs in a list
-	return True,list(blogs),list(links),list(posts)
+	return True,list(blogs),list(links),list(posts),list(note_list)
 
 # sends the blogs to the frontier
 def send_blogs_to_DB(host,port,blogs,links):
