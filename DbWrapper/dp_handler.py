@@ -110,7 +110,7 @@ def worker(thread_number,socket_number):
 					cursor = db_conn.cursor()
 					for a in post_list:
 						try:
-							t = a["timestamp_created"]
+							t = time.time(a["timestamp_created"])
 							cursor.execute("insert into post values(%d,%s,%s,%s,%s,%s,%d);",
 									(	a["post_id"],
 										a["link"],
