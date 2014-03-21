@@ -115,8 +115,8 @@ def get_blog_from_frontier(host,port):
 def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 
 	#return list
-	blogs = set([])
-	links = set([])
+	blogs = []
+	links = []
 
 	# build url for api
 	try:
@@ -130,7 +130,7 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		url += '/posts'+ authentication + parameters
 	except Exception as e:
 		print("Could not build")
-		return False,[]
+		return False,[],[]
 
 	# retrieve html
 	try:
@@ -138,14 +138,14 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		html = response.read()
 	except Exception as e:
 		print("Could not get Html",str(url))
-		return False,[]
+		return False,[],[]
 
 	# parse html into json
 	try:
 		x = json.loads(html.decode('UTF-8'))
 	except Exception as e:
 		print("Could not Parse to Json")
-		return False,[]
+		return False,[],[]
 
 	# look for "unique blogs"
 	try:
@@ -156,14 +156,97 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 						for b in a["notes"]:
 							if "blog_name" in b:
 								if b["blog_name"] not in blogs:
-									blogs.add(b["blog_name"])
-									links.add(b["blog_url"])
+									blogs.append(b["blog_name"])
+									links.append(b["blog_url"])
 	except Exception as e:
 		print("Could Not Parse Json into Unique Blogs")
-		return False,[]
+		return False,[],[]
 
 	# return list of unique blogs in a list
-	return True,list(blogs)
+	return True,list(blogs),list(links)
+
+# sends the blogs to the frontier
+def send_blogs_to_DB(host,port,blogs,links):
+
+	#connect to the frontier to get a socket to communicate with
+	connection_success = False
+	connection_success_fails = 0
+	while not connection_success:
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((host, port))
+			connection_success = True
+		except Exception as e:
+			print("Could Not Link To Socket " + str(port))
+			connection_success_fails += 1
+			if connection_success_fails > 5:
+				print("Max Link Fails to socket " + str(port))
+				return False
+			time.sleep(.1*random.randint(1,5))
+			pass
+
+	#send the json request for a socket
+	s.send(str.encode(json.dumps({"request_type":"socket_request"})))
+	s.shutdown(socket.SHUT_WR)
+
+	try:
+		#recieve the response
+		data = bytes([])
+		while True:
+			new_data = s.recv(1024)
+			if not new_data: break
+			data += new_data
+		s.close()
+	except Exception as e:
+		print("Socket Was Reset")
+		return False
+	try:
+		data = str(data,'UTF-8')
+	except Exception as e:
+		print("Bytes Return on Socket Request Malformed")
+		return False
+	
+	#load the data using json load
+	try:
+		json_data = json.loads(data)
+	except Exception as e:
+		print("Json Return on Socket Request Malformed" + str(data))
+		return False
+
+	#build our queue_blogs json
+	input_data = 	{
+						"request_type": "save_blogs",
+						"blogs": blogs,
+						"links":links,
+					}
+
+	# get an available socket number
+	try:
+		if not json_data["worked"]:
+			raise Exception("Socket Request Failed")
+		queue_blogs_socket_number = (json_data["socket_number"])
+	except Exception as e:
+		print(e)
+		return False
+
+	#open that socket
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((host, queue_blogs_socket_number))
+	except Exception as e:
+		print("Payload Socket Didnt Open: " + str(e))
+		return False
+
+	#send it our payload
+	try:
+		send_data = json.dumps(input_data)
+		s.send(str.encode(send_data))
+		s.shutdown(socket.SHUT_WR)
+		s.close()
+	except Exception as e:
+		print("Could Not Send Payload: " + str(e))
+		return False
+	return True
 
 # sends the blogs to the frontier
 def send_blogs_to_frontier(host,port,blogs):
@@ -352,6 +435,9 @@ if __name__ == "__main__":
 	host = 'helix.vis.uky.edu'
 	port = 8888
 
+	db_host = '172.31.40.208'
+	db_port = 8888
+
 
 	# first try to get the api key from 
 
@@ -404,7 +490,7 @@ if __name__ == "__main__":
 			insert_blogs = []
 			print("Get Notes From Tumblr")
 			while True:
-				ret,insert_blogs = get_blogs_from_notes(new_blog,api_key)
+				ret,insert_blogs,insert_links = get_blogs_from_notes(new_blog,api_key)
 				if ret:
 					break
 				fail_count += 1
@@ -412,6 +498,24 @@ if __name__ == "__main__":
 					print("Failed on tumblr access, Number of Blogs Visited: " + str(blogs_visited))
 					sys.exit()
 				time.sleep(1)
+
+			#insert blogs into db
+			fail_count = 0
+			print("Insert New Blogs to our Frontier")
+			while True:
+				ret = send_blogs_to_DB(db_host,db_port,insert_blogs,insert_links)
+				if ret:
+					break
+				fail_count += 1
+				if fail_count > 10:
+					print("Failed on Send Blogs, Number of Blogs Visited: " + str(blogs_visited))
+					sys.exit()
+				time.sleep(.1)
+
+			blogs_visited += 1
+			if blogs_visited %10 == 0:
+				print("Visited " + str(blogs_visited) + " blogs successfully")
+
 
 			#insert the blogs into our frontier
 			fail_count = 0
