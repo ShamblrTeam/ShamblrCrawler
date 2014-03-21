@@ -10,7 +10,7 @@ def do_stuff():
 	try:
 		PORT_INDEX = 0
 		while True:
-			HOST = 'helix.vis.uky.edu'                  # The remote host
+			HOST = 'localhost'                  # The remote host
 			PORTS = [8888]  # The same port as used by the server
 			success = True
 			try:
@@ -33,6 +33,7 @@ def do_stuff():
 				data += new_data
 			s.close()
 			data = str(data,'UTF-8')
+			print (data)
 			json_data = json.loads(data)			
 
 			#change the input data to your liking			
@@ -48,7 +49,10 @@ def do_stuff():
 			#input_data = {	"request_type":"new_blog_request",}			
 
 			#This one queries ouput
-			input_data = {	"request_type":"status_report",}	
+			input_data = {	"request_type":"save_blogs",
+							"blogs":["wewewewewe","har","wowoweee"],
+							"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
+						}	
 			
 					
 
