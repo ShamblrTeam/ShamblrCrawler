@@ -56,8 +56,7 @@ def do_stuff():
 			
 			#puts in posts
 			input_data = {	"request_type":"save_posts",
-							"blogs":["wewewewewe","har","wowoweee"],
-							"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
+							
 						}	
 
 			#Puts in notes
