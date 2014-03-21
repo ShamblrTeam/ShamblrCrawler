@@ -148,7 +148,7 @@ def worker(thread_number,socket_number):
 				# get the blogs and the links from the request
 				try:
 					insert_values = []
-					post_list = json_data["notes"]
+					note_list = json_data["notes"]
 
 					#now build the db stuff and insert into the db
 					conn_string = "host='localhost' dbname='cs585' user='cs585' "
