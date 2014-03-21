@@ -139,6 +139,8 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 				formed_post["content"] = post["audio_url"]
 			elif formed_post["type"] == "video":
 				formed_post["content"] = post["permalink_url"]
+			elif formed_post["type"] == "answer":
+				formed_post["content"] = "WOW"
 			else:
 				raise Exception
 		except Exception as e:
@@ -154,15 +156,9 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 			note = {}
 			note["timestamp"] = item["timestamp"]
 			note["blog_name"] = item["blog_name"]
-			note["blog_url"] = item["blog_url"]
 			note["type"] = item["type"]
-			if note["type"] == "reblog":
-				note["post_id"] = item["post_id"]
-			else:
-				#just so we're clear, this is worthless for non reblog posts because every copy of the
-				#post has the same likes/replies/posted notes
-				note["post_id"] = postid
-			note_list += note
+			note["post_id"] = postid
+			note_list.append(note)
 		return note_list
 
 
@@ -210,18 +206,19 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 					print(post)
 					if post != False:
 						posts.append(post)
-						note_list += get_notes_from_post(a,post["post_id"])
-					if "notes" in a:
-						for b in a["notes"]:
-							if "blog_name" in b:
-								if b["blog_name"] not in blogs:
-									blogs.append(b["blog_name"])
-									links.append(b["blog_url"])
+						if "notes" in a:
+							note_list += get_notes_from_post(a,post["post_id"])
+							for b in a["notes"]:
+								if "blog_name" in b:
+									if b["blog_name"] not in blogs:
+										blogs.append(b["blog_name"])
+										links.append(b["blog_url"])
 	except Exception as e:
 		print("Could Not Parse Json into Unique Blogs")
 		return False,[],[],[],[]
 
 	# return list of unique blogs in a list
+	print (note_list)
 	return True,list(blogs),list(links),list(posts),list(note_list)
 
 # sends the blogs to the frontier
@@ -359,6 +356,88 @@ def send_posts_to_DB(host,port,posts):
 	input_data = 	{
 						"request_type": "save_posts",
 						"posts": posts,
+					}
+
+	# get an available socket number
+	try:
+		if not json_data["worked"]:
+			raise Exception("Socket Request Failed")
+		queue_blogs_socket_number = (json_data["socket_number"])
+	except Exception as e:
+		print(e)
+		return False
+
+	#open that socket
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((host, queue_blogs_socket_number))
+	except Exception as e:
+		print("Payload Socket Didnt Open: " + str(e))
+		return False
+
+	#send it our payload
+	try:
+		send_data = json.dumps(input_data)
+		s.send(str.encode(send_data))
+		s.shutdown(socket.SHUT_WR)
+		s.close()
+	except Exception as e:
+		print("Could Not Send Payload: " + str(e))
+		return False
+	return True
+
+#send notes to db
+def send_notes_to_DB(host,port,notes):
+
+	#connect to the frontier to get a socket to communicate with
+	connection_success = False
+	connection_success_fails = 0
+	while not connection_success:
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((host, port))
+			connection_success = True
+		except Exception as e:
+			print("Could Not Link To Socket " + str(port))
+			connection_success_fails += 1
+			if connection_success_fails > 5:
+				print("Max Link Fails to socket " + str(port))
+				return False
+			time.sleep(.1*random.randint(1,5))
+			pass
+
+	#send the json request for a socket
+	s.send(str.encode(json.dumps({"request_type":"socket_request"})))
+	s.shutdown(socket.SHUT_WR)
+
+	try:
+		#recieve the response
+		data = bytes([])
+		while True:
+			new_data = s.recv(1024)
+			if not new_data: break
+			data += new_data
+		s.close()
+	except Exception as e:
+		print("Socket Was Reset")
+		return False
+	try:
+		data = str(data,'UTF-8')
+	except Exception as e:
+		print("Bytes Return on Socket Request Malformed")
+		return False
+	
+	#load the data using json load
+	try:
+		json_data = json.loads(data)
+	except Exception as e:
+		print("Json Return on Socket Request Malformed" + str(data))
+		return False
+
+	#build our queue_blogs json
+	input_data = 	{
+						"request_type": "save_notes",
+						"notes": notes,
 					}
 
 	# get an available socket number
@@ -631,7 +710,7 @@ if __name__ == "__main__":
 			insert_blogs = []
 			print("Get Notes From Tumblr")
 			while True:
-				ret,insert_blogs,insert_links,insert_posts = get_blogs_from_notes(new_blog,api_key)
+				ret,insert_blogs,insert_links,insert_posts,insert_notes = get_blogs_from_notes(new_blog,api_key)
 				if ret:
 					break
 				fail_count += 1
@@ -657,7 +736,7 @@ if __name__ == "__main__":
 			if blogs_visited %10 == 0:
 				print("Visited " + str(blogs_visited) + " blogs successfully")
 
-			#insert blogs into db
+			#insert posts into db
 			fail_count = 0
 			print("Insert New Blogs to our database")
 			while True:
@@ -667,6 +746,24 @@ if __name__ == "__main__":
 				fail_count += 1
 				if fail_count > 10:
 					print("Failed on Send Posts, Number of Blogs Visited: " + str(blogs_visited))
+					sys.exit()
+				time.sleep(.1)
+
+			blogs_visited += 1
+			if blogs_visited %10 == 0:
+				print("Visited " + str(blogs_visited) + " blogs successfully")
+
+			#insert notes into DB
+			fail_count = 0
+			print("Insert New Blogs to our database")
+			while True:
+				print (insert_notes)
+				ret = send_notes_to_DB(db_host,db_port,insert_notes)
+				if ret:
+					break
+				fail_count += 1
+				if fail_count > 10:
+					print("Failed on Send Notes, Number of Blogs Visited: " + str(blogs_visited))
 					sys.exit()
 				time.sleep(.1)
 

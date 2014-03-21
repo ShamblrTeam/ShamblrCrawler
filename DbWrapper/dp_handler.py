@@ -111,7 +111,7 @@ def worker(thread_number,socket_number):
 					for a in post_list:
 						try:
 							print (a)
-							t = time.gmtime(a["timestamp"])
+							t = time.gmtime(int(a["timestamp"]))
 							print(t)
 							print (t.tm_year)
 							print (psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
@@ -157,8 +157,8 @@ def worker(thread_number,socket_number):
 					for a in note_list:
 						try:
 							print (a)
-							t = time.gmtime(a["timestamp"])
-							cursor.execute("insert into post values(%s,%s,%s,%s);",
+							t = time.gmtime(int(a["timestamp"]))
+							cursor.execute("insert into note values(%s,%s,%s,%s);",
 									(	a["post_id"],
 										a["type"],
 										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
