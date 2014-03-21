@@ -48,12 +48,22 @@ def do_stuff():
 			#This one is for taking from the queue
 			#input_data = {	"request_type":"new_blog_request",}			
 
-			#This one queries ouput
+			#This one puts in blogs
 			input_data = {	"request_type":"save_blogs",
 							"blogs":["wewewewewe","har","wowoweee"],
 							"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
 						}	
 			
+			#puts in posts
+			input_data = {	"request_type":"save_posts",
+							"blogs":["wewewewewe","har","wowoweee"],
+							"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
+						}	
+
+			#Puts in notes
+			input_data = {	"request_type":"save_notes",
+							"notes": [{	"post_id":1,"type":"text""timestamp":1000100,"blog_name":"Wow",}],
+						}	
 					
 
 			if "request_type" in json_data:
