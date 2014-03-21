@@ -34,16 +34,16 @@ def get_blog_from_frontier(host,port):
 	s.shutdown(socket.SHUT_WR)
 
 	#recieve the response
-	data = bytes([])
-	while True:
-		new_data = s.recv(1024)
-		if not new_data: break
-		data += new_data
-	s.close()
 	try:
+		data = bytes([])
+		while True:
+			new_data = s.recv(1024)
+			if not new_data: break
+			data += new_data
+		s.close()
 		data = str(data,'UTF-8')
 	except Exception as e:
-		print("Bytes Return on Socket Request Malformed")
+		print("Didn't recieve response from Frontier")
 		return False,None
 	
 	#load the data using json load
@@ -116,6 +116,7 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 
 	#return list
 	blogs = set([])
+	links = set([])
 
 	# build url for api
 	try:
@@ -156,6 +157,7 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 							if "blog_name" in b:
 								if b["blog_name"] not in blogs:
 									blogs.add(b["blog_name"])
+									links.add(b["blog_url"])
 	except Exception as e:
 		print("Could Not Parse Json into Unique Blogs")
 		return False,[]
