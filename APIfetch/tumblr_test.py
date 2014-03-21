@@ -291,6 +291,88 @@ def send_blogs_to_DB(host,port,blogs,links):
 		return False
 	return True
 
+#send posts to db
+def send_posts_to_DB(host,port,posts):
+
+	#connect to the frontier to get a socket to communicate with
+	connection_success = False
+	connection_success_fails = 0
+	while not connection_success:
+		try:
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect((host, port))
+			connection_success = True
+		except Exception as e:
+			print("Could Not Link To Socket " + str(port))
+			connection_success_fails += 1
+			if connection_success_fails > 5:
+				print("Max Link Fails to socket " + str(port))
+				return False
+			time.sleep(.1*random.randint(1,5))
+			pass
+
+	#send the json request for a socket
+	s.send(str.encode(json.dumps({"request_type":"socket_request"})))
+	s.shutdown(socket.SHUT_WR)
+
+	try:
+		#recieve the response
+		data = bytes([])
+		while True:
+			new_data = s.recv(1024)
+			if not new_data: break
+			data += new_data
+		s.close()
+	except Exception as e:
+		print("Socket Was Reset")
+		return False
+	try:
+		data = str(data,'UTF-8')
+	except Exception as e:
+		print("Bytes Return on Socket Request Malformed")
+		return False
+	
+	#load the data using json load
+	try:
+		json_data = json.loads(data)
+	except Exception as e:
+		print("Json Return on Socket Request Malformed" + str(data))
+		return False
+
+	#build our queue_blogs json
+	input_data = 	{
+						"request_type": "save_posts",
+						"posts": posts,
+					}
+
+	# get an available socket number
+	try:
+		if not json_data["worked"]:
+			raise Exception("Socket Request Failed")
+		queue_blogs_socket_number = (json_data["socket_number"])
+	except Exception as e:
+		print(e)
+		return False
+
+	#open that socket
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((host, queue_blogs_socket_number))
+	except Exception as e:
+		print("Payload Socket Didnt Open: " + str(e))
+		return False
+
+	#send it our payload
+	try:
+		send_data = json.dumps(input_data)
+		s.send(str.encode(send_data))
+		s.shutdown(socket.SHUT_WR)
+		s.close()
+	except Exception as e:
+		print("Could Not Send Payload: " + str(e))
+		return False
+	return True
+
 # sends the blogs to the frontier
 def send_blogs_to_frontier(host,port,blogs):
 
@@ -552,6 +634,23 @@ if __name__ == "__main__":
 				fail_count += 1
 				if fail_count > 10:
 					print("Failed on Send Blogs, Number of Blogs Visited: " + str(blogs_visited))
+					sys.exit()
+				time.sleep(.1)
+
+			blogs_visited += 1
+			if blogs_visited %10 == 0:
+				print("Visited " + str(blogs_visited) + " blogs successfully")
+
+			#insert blogs into db
+			fail_count = 0
+			print("Insert New Blogs to our database")
+			while True:
+				ret = send_posts_to_DB(db_host,db_port,insert_posts)
+				if ret:
+					break
+				fail_count += 1
+				if fail_count > 10:
+					print("Failed on Send Posts, Number of Blogs Visited: " + str(blogs_visited))
 					sys.exit()
 				time.sleep(.1)
 
