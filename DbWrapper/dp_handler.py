@@ -110,11 +110,7 @@ def worker(thread_number,socket_number):
 					cursor = db_conn.cursor()
 					for a in post_list:
 						try:
-							print (a)
 							t = time.gmtime(int(a["timestamp"]))
-							print(t)
-							print (t.tm_year)
-							print (psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
 							cursor.execute("insert into post values(%s,%s,%s,%s,%s,%s,%s);",
 									(	a["post_id"],
 										a["post_link"],
@@ -130,6 +126,14 @@ def worker(thread_number,socket_number):
 							print ("sdfsdfdsf" , str(e))
 							db_conn.rollback()
 							pass
+						if "tags" in a:
+							for b in a["tags"]:
+								try:
+									cursor.execute("insert into tag values(%s,%s);",(b,a["post_id"]))
+									db_conn.commit()
+								except Exception as e:
+									db_conn.rollback()
+									pass
 					db_conn.commit()
 					cursor.close()
 					db_conn.close()
@@ -156,7 +160,6 @@ def worker(thread_number,socket_number):
 					cursor = db_conn.cursor()
 					for a in note_list:
 						try:
-							print (a)
 							t = time.gmtime(int(a["timestamp"]))
 							cursor.execute("insert into note values(%s,%s,%s,%s);",
 									(	a["post_id"],
