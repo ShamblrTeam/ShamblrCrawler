@@ -9,7 +9,7 @@ import time
 
 
 #Handles if the program should print stuff
-verbose = True
+verbose = False 
 
 # Host of the machine
 #This defaults to all network locations for the maching
@@ -110,19 +110,24 @@ def worker(thread_number,socket_number):
 					cursor = db_conn.cursor()
 					for a in post_list:
 						try:
-							t = time.time(a["timestamp_created"])
+							print (a)
+							t = time.gmtime(a["timestamp"])
+							print(t)
+							print (t.tm_year)
+							print (psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec))
 							cursor.execute("insert into post values(%d,%s,%s,%s,%s,%s,%d);",
 									(	a["post_id"],
-										a["link"],
+										a["post_link"],
 										a["blog_name"],
 										a["type"],
-										a["content"],
+										a["content"][:500],
 										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
 										a["note_count"]
 									)
 								)
 							db_conn.commit()
 						except Exception as e:
+							print ("sdfsdfdsf" , str(e))
 							db_conn.rollback()
 							pass
 					db_conn.commit()
