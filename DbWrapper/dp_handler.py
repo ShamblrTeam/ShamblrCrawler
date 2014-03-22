@@ -47,19 +47,31 @@ def worker(thread_number,socket_number):
 			if not new_data: break
 			data += new_data
 		data = str(data,'UTF-8')
+
 		if verbose:
 			print ("Data Recieved: ",data)
+
+	
+		# default return values
+		worked = False
+		request_type = "NOT_RECOGNIZED"
+
+		# common connection string
+		conn_string = "host='localhost' dbname='cs585' user='cs585' "
+		db_conn = psycopg2.connect(conn_string) # closed in finally statement
 
 		#turn those bytes into a json request
 		try:
 			json_data = json.loads(data)
 		except Exception as e:
 			print ("Failed to parse JSON")
+			worked = False
 
 		#check to make sure the request has a type 
 		if "request_type" in json_data:
 
 			if json_data["request_type"] == "save_blogs":
+				request_type = "save_blogs"
 
 				# get the blogs and the links from the request
 				try:
@@ -74,8 +86,6 @@ def worker(thread_number,socket_number):
 						insert_values.append({"name":blog_list[a],"link":link_list[a]})
 
 					#now build the db stuff and insert into the db
-					conn_string = "host='localhost' dbname='cs585' user='cs585' "
-					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
 
 					# this is more efficient than commit a lot of transactions.
@@ -83,33 +93,27 @@ def worker(thread_number,socket_number):
 					try:
 						cursor.executemany("""INSERT INTO blog VALUES (%(name)s, %(link)s)""", insert_values)
 						db_conn.commit()
+						cursor.close()
+						worked = True
 					except Exception as e:
 						db_conn.rollback()
 						print ("Error in save_blogs: " + str(e))
+						worked = False
 						pass
 
-					cursor.close()
-					db_conn.close()
-					send_data = {	"worked":True,
-								"request_type":"save_blogs",
-								}
-
 				except Exception as e:
-					print ("WOW: " + str(e))
-					send_data = {	"worked":False,
-								"request_type":"save_blogs",
-								}
+					print("Esception: " + str(e))
+					worked = False
 
 			elif json_data["request_type"] == "save_posts":
-			
+
+				request_type = "save_posts"
+
 				# get the blogs and the links from the request
 				try:
 					insert_values = []
 					post_list = json_data["posts"]
 
-					#now build the db stuff and insert into the db
-					conn_string = "host='localhost' dbname='cs585' user='cs585' "
-					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
 
 					# add DB timestamps to posts
@@ -122,33 +126,29 @@ def worker(thread_number,socket_number):
 							(%(post_id)d, %(link)s, %(blog_name)s, 
 							 %(type)s, %(content)s, %(db_timestamp_created)s, %(note_count)d)""", post_list)
 						db_conn.commit()
+						cursor.close()
+						worked = True
 					except Exception as e:
 						print ("Error in Save_posts: " + str(e))
 						db_conn.rollback()
-						pass
-
-					cursor.close()
-					db_conn.close()
-					send_data = {	"worked":True,
-								"request_type":"save_blogs",
-								}
+						worked = False
 
 				except Exception as e:
 					print ("WOW: " + str(e))
-					send_data = {	"worked":False,
-								"request_type":"save_blogs",
-								}
+					worked = False
+
+
 
 			elif json_data["request_type"] == "save_notes":
-				
+
+				request_type = "save_notes"
+
 				# get the blogs and the links from the request
 				try:
 					insert_values = []
 					note_list = json_data["notes"]
 
 					#now build the db stuff and insert into the db
-					conn_string = "host='localhost' dbname='cs585' user='cs585' "
-					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
 
 					# add timestamp object to each note.
@@ -161,29 +161,27 @@ def worker(thread_number,socket_number):
 							(%(post_id)s,%(type)s,%(timestamp_created)s,
 							%(blog_name)s)""", note_list)
 						db_conn.commit()
+						cursor.close()
+						worked = True
 					except Exception as e:
 						db_conn.rollback()
 						print ("Error inserting note:" + str(e))
-
-					cursor.close()
-					db_conn.close()
-					send_data = {	"worked":True,
-								"request_type":"save_blogs",
-								}
+						worked = False
 
 				except Exception as e:
 					print ("WOW: " + str(e))
-					send_data = {	"worked":False,
-								"request_type":"save_blogs",
-								}
+					worked = False
 
 
 			#make sure we catch all shitty requests
 			else:
-				#build the json for the return string
-				send_data = {	"worked":True,
-								"request_type":"NOT RECOGNIZED",
-								}
+				worked = False
+				request_type = "NOT RECOGNIZED"
+
+			send_data = {
+				"worked": worked,
+				"request_type": request_type,
+			}
 
 			#send the message
 			conn.send(str.encode(json.dumps(send_data)))
@@ -199,7 +197,8 @@ def worker(thread_number,socket_number):
 	finally:
 		if conn != None:
 			conn.close()
-
+		if db_conn != None:
+			db_conn.close()
 
 # this function checks for open sockets within a range
 # if the socket it tried didnt match, it just exits with false
