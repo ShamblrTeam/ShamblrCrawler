@@ -85,6 +85,7 @@ def worker(thread_number,socket_number):
 						db_conn.commit()
 					except Exception as e:
 						db_conn.rollback()
+						print ("Error in save_blogs: " + str(e))
 						pass
 
 					cursor.close()
@@ -122,6 +123,7 @@ def worker(thread_number,socket_number):
 							 %(type)s, %(content)s, %(db_timestamp_created)s, %(note_count)d)""", post_list)
 						db_conn.commit()
 					except Exception as e:
+						print ("Error in Save_posts: " + str(e))
 						db_conn.rollback()
 						pass
 
@@ -148,22 +150,21 @@ def worker(thread_number,socket_number):
 					conn_string = "host='localhost' dbname='cs585' user='cs585' "
 					db_conn = psycopg2.connect(conn_string)
 					cursor = db_conn.cursor()
-					for a in note_list:
-						try:
-							t = time.gmtime(int(a["timestamp"]))
-							cursor.execute("insert into note values(%s,%s,%s,%s);",
-									(	a["post_id"],
-										a["type"],
-										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
-										a["blog_name"]
-									)
-								)
-							db_conn.commit()
-						except Exception as e:
-							print ("sdfsdfdsf" , str(e))
-							db_conn.rollback()
-							pass
-					db_conn.commit()
+
+					# add timestamp object to each note.
+					for i in range(len(note_list)):
+						t = time.gmtime(int(note_list[i]["timestamp"]))
+						note_list[i]["timestamp_created"] = psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
+
+					try:
+						cursor.executemany("""INSERT INTO note VALUES 
+							(%(post_id)s,%(type)s,%(timestamp_created)s,
+							%(blog_name)s)""", note_list)
+						db_conn.commit()
+					except Exception as e:
+						db_conn.rollback()
+						print ("Error inserting note:" + str(e))
+
 					cursor.close()
 					db_conn.close()
 					send_data = {	"worked":True,
