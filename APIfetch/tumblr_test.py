@@ -123,21 +123,28 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		formed_post["note_count"] = post["note_count"]
 		formed_post["tags"] = post["tags"]
 		formed_post["type"] = post["type"]
+
+		formed_post["title"] = ""
+		if "title" in post:
+			formed_post["title"] = post["title"]
+
 		try:
 			if formed_post["type"] == "text":
-				formed_post["content"] = str(post["title"]) + str(post["body"])
+				formed_post["content"] = str(post["body"])
 			elif formed_post["type"] == "photo":
 				#consider photoset
+				formed_post["title"] = post["caption"]
 				formed_post["content"] = post["photos"][0]["original_size"]["url"]
 			elif formed_post["type"] == "quote":
 				formed_post["content"] = str(post["text"]) + str(post["source"])
 			elif formed_post["type"] == "link":
 				formed_post["content"] = post["url"]
 			elif formed_post["type"] == "chat":
-				formed_post["content"] = str(post["title"]) + str(post["body"])
+				formed_post["content"] = str(post["body"])
 			elif formed_post["type"] == "audio":
 				formed_post["content"] = post["audio_url"]
 			elif formed_post["type"] == "video":
+				formed_post["title"] = post["caption"]
 				formed_post["content"] = post["permalink_url"]
 			elif formed_post["type"] == "answer":
 				formed_post["content"] = "WOW"
@@ -738,7 +745,7 @@ if __name__ == "__main__":
 
 			#insert posts into db
 			fail_count = 0
-			print("Insert New Blogs to our database")
+			print("Insert New Posts to our database")
 			while True:
 				ret = send_posts_to_DB(db_host,db_port,insert_posts)
 				if ret:
@@ -755,7 +762,7 @@ if __name__ == "__main__":
 
 			#insert notes into DB
 			fail_count = 0
-			print("Insert New Blogs to our database")
+			print("Insert New Notes to our database")
 			while True:
 				print (insert_notes)
 				ret = send_notes_to_DB(db_host,db_port,insert_notes)

@@ -111,14 +111,15 @@ def worker(thread_number,socket_number):
 					for a in post_list:
 						try:
 							t = time.gmtime(int(a["timestamp"]))
-							cursor.execute("insert into post values(%s,%s,%s,%s,%s,%s,%s);",
+							cursor.execute("insert into post values(%s,%s,%s,%s,%s,%s,%s,%s);",
 									(	a["post_id"],
 										a["post_link"],
 										a["blog_name"],
 										a["type"],
 										a["content"][:500],
 										psycopg2.Timestamp(t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec),
-										a["note_count"]
+										a["note_count"],
+										a["title"],
 									)
 								)
 							db_conn.commit()
