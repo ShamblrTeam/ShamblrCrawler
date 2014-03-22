@@ -133,6 +133,7 @@ def worker(thread_number,socket_number):
 						db_conn.rollback()
 						worked = False
 
+
 				except Exception as e:
 					print ("WOW: " + str(e))
 					worked = False
