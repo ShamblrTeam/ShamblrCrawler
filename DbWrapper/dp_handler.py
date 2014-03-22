@@ -185,9 +185,9 @@ def worker(thread_number,socket_number):
 								"request_type":"NOT RECOGNIZED",
 								}
 
-				#send the message
-				conn.send(str.encode(json.dumps(send_data)))
-				conn.shutdown(socket.SHUT_WR)
+			#send the message
+			conn.send(str.encode(json.dumps(send_data)))
+			conn.shutdown(socket.SHUT_WR)
 
 	#catch all thread exceptions so that we know what happened
 	except Exception as e:
