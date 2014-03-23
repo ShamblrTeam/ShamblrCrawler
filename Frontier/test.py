@@ -43,26 +43,31 @@ def do_stuff():
 				return ''.join([chr(random.randint(65,90))]+[chr(random.randint(97,122)) for x in range(10)])			
 
 			names = [random_name() for x in range(50)]
-			#input_data = {	"request_type":"queue_blogs","blog_list": names,}			
+			
+			# queues blogs
+			input_data = {	"request_type":"queue_blogs","blog_list": names,}			
 
 			#This one is for taking from the queue
 			#input_data = {	"request_type":"new_blog_request",}			
 
+			#status_request
+			#input_data = {	"request_type":"status_report",}	
+
 			#This one puts in blogs
-			input_data = {	"request_type":"save_blogs",
-							"blogs":["wewewewewe","har","wowoweee"],
-							"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
-						}	
+			#input_data = {	"request_type":"save_blogs",
+			#				"blogs":["wewewewewe","har","wowoweee"],
+			#				"links":["sdfsdfsdf","http://harharharharhar","http://sdfsdf"],
+			#			}	
 			
 			#puts in posts
-			input_data = {	"request_type":"save_posts",
-							
-						}	
+			#input_data = {	"request_type":"save_posts",
+			#				
+			#			}	
 
 			#Puts in notes
-			input_data = {	"request_type":"save_notes",
-							"notes": [{	"post_id":1,"type":"text""timestamp":1000100,"blog_name":"Wow",}],
-						}	
+			#input_data = {	"request_type":"save_notes",
+			#				"notes": [{	"post_id":1,"type":"text""timestamp":1000100,"blog_name":"Wow",}],
+			#			}	
 					
 
 			if "request_type" in json_data:
@@ -85,11 +90,8 @@ def do_stuff():
 								json_data = json.loads(data)
 							print(json_data)
 							s.close()
-			sys.exit()
 	except Exception as e:
+		print (e)
 		return True
-
 while True:
-	time.sleep(.1)
 	do_stuff()
-	sys.exit()

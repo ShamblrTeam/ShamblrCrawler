@@ -18,7 +18,6 @@ import random
 import sys
 import os
 
-
 #our hash table that stores used values
 hash_table = set()
 
@@ -86,6 +85,7 @@ def worker(thread_number,socket_number):
 
 				#close and dereference the connection
 				#This is done in order to not waste sockets
+				conn.shutdown(socket.SHUT_WR)
 				conn.close()
 				conn = None
 				if verbose:
