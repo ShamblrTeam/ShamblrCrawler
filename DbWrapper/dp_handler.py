@@ -96,6 +96,7 @@ def worker(thread_number,socket_number):
 					send_data = {	"worked":False,
 								"request_type":"save_blogs",
 								}
+					pass
 
 			elif json_data["request_type"] == "save_posts":
 			
@@ -111,9 +112,11 @@ def worker(thread_number,socket_number):
 					for a in post_list:
 						try:
 							t = time.gmtime(int(a["timestamp"]))
+							if a["title"] != None:
+								a["title"] = a["title"][:100]
 							cursor.execute("insert into post values(%s,%s,%s,%s,%s,%s,%s,%s);",
 									(	a["post_id"],
-										a["post_link"],
+										a["post_link"][:300],
 										a["blog_name"],
 										a["type"],
 										a["content"][:500],
@@ -124,7 +127,7 @@ def worker(thread_number,socket_number):
 								)
 							db_conn.commit()
 						except Exception as e:
-							print ("sdfsdfdsf" , str(e))
+							print ("DB Fail - " , str(e))
 							db_conn.rollback()
 							pass
 						if "tags" in a:
@@ -147,6 +150,7 @@ def worker(thread_number,socket_number):
 					send_data = {	"worked":False,
 								"request_type":"save_blogs",
 								}
+					pass
 
 			elif json_data["request_type"] == "save_notes":
 				
@@ -186,6 +190,7 @@ def worker(thread_number,socket_number):
 					send_data = {	"worked":False,
 								"request_type":"save_blogs",
 								}
+					pass
 
 
 			#make sure we catch all shitty requests

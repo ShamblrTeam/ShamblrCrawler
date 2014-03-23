@@ -127,6 +127,8 @@ def get_blogs_from_notes(blog_name,api_key,offset=None,limit=None):
 		formed_post["title"] = ""
 		if "title" in post:
 			formed_post["title"] = post["title"]
+		else:
+			formed_post["title"] = None
 
 		try:
 			if formed_post["type"] == "text":
