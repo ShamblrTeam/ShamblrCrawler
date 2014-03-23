@@ -361,6 +361,7 @@ def main(socket_num):
 		print (str(opened_port))
 		print ("\n----------------\n")
 		conn = None
+		sys.exit()
 
 	# Close the Connection at the end of the program 
 	# we want to make sure we do this any time we have a socket 
