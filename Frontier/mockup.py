@@ -20,9 +20,16 @@ import os
 
 #our hash table that stores used values
 hash_table = set()
+if os.path.isfile("SET_SAVE.data"):
+	for a in open("SET_SAVE.data",'r'):
+		hash_table.add(a.strip('\n'))
+
 
 #our frontier queue which handles queueing
 frontier_queue = queue.Queue()
+if os.path.isfile("QUEUE_SAVE.data"):
+	for a in open("QUEUE_SAVE.data",'r'):
+		hash_table.add(a.strip('\n'))
 
 #our API Key Queue which handles our API Keys
 api_key_queue = queue.Queue()
@@ -235,11 +242,11 @@ def main_socket_get():
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.bind((common_host,port))
 		except Exception as e:
-			print("Could Not Link To Socket " + str(port))
+			#print("Could Not Link To Socket " + str(port))
 			success = False
 			pass
 		if success:
-			print("Linked To Socket " + str(port))
+			#print("Linked To Socket " + str(port))
 			return True,port, s
 	return False, None, None
 
@@ -343,6 +350,7 @@ def main(socket_num):
 		print (str(opened_port))
 		print ("\n----------------\n")
 		conn = None
+		sys.exit()
 
 	# Close the Connection at the end of the program 
 	# we want to make sure we do this any time we have a socket 
@@ -355,7 +363,20 @@ def main(socket_num):
 
 #this runs the program if it is the main program
 if __name__ == "__main__":
-	#fill api key queue
-	for a in open(api_key_file_location,'r').readlines():
-		api_key_queue.put(a.strip('\n'))
-	main(8888)
+	try:
+		#fill api key queue
+		for a in open(api_key_file_location,'r').readlines():
+			api_key_queue.put(a.strip('\n'))
+		main(8888)
+	except Exception as e:
+		pass
+	finally:
+		f = open("SET_SAVE.data",'w')
+		save_hash_table = frozenset(hash_table)
+		for a in hash_table:
+			f.write(str(a) + "\n")
+		f.close()
+		f = open("QUEUE_SAVE.data",'w')
+		while not frontier_queue.empty():
+			f.write(str(frontier_queue.get()) + '\n')
+		f.close()

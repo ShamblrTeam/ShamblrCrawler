@@ -37,3 +37,6 @@ nosetests.xml
 
 Frontier/API_KEY_LIST.data
 Frontier/api-keys.json
+
+Frontier/QUEUE_SAVE.data
+Frontier/SET_SAVE.data
