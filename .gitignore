@@ -40,8 +40,3 @@ Frontier/api-keys.json
 
 Frontier/QUEUE_SAVE.data
 Frontier/SET_SAVE.data
-
-# crontab
-cron_jobs.txt
-output.log
-*.pid
