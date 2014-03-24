@@ -44,4 +44,4 @@ Frontier/SET_SAVE.data
 # crontab
 cron_jobs.txt
 output.log
-*/logs
+*.pid

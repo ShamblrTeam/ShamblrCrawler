@@ -23,4 +23,4 @@ else
 fi
 
 # begin the cron job
-crontab cron_jobs.txt
+crontab $CRON_FILE 

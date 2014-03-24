@@ -10,7 +10,7 @@ MODULE_NAME=$3
 PIDFILE=${PROCESS_DIR}/logs/${MODULE_NAME}.pid
 
 # python path
-PYTHON=/usr/bin/python3.3
+PYTHON=/usr/local/bin/python3.3
 
 # tools for process discovery etc.
 PGREP=/usr/bin/pgrep
