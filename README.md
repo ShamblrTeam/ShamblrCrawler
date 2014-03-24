@@ -5,7 +5,7 @@ This is our main crawler
 RUN USING python3!
 
 run the monitor as follows:
+nohup sh monitor.sh path/to/script.py >output.out 2>&1 &
 
-nohup monitor.sh Path/to/script.py &
-
-But first test it with 'sh monitor.sh Path/to/script.py'
+example:
+nohup sh monitor.sh Frontier/ >nohup_frontier.out 2>&1 &
