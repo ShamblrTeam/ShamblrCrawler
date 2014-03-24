@@ -1,20 +1,16 @@
 #!/bin/bash
 #
 # the root of the project/process directory
-PROCESS_DIR=`pwd`/$1
+PROCESS_DIR=`pwd`/$2
 
 # module name used for pid file etc.
-MODULE_NAME=$2
+MODULE_NAME=$3
 
 # pid file for starting/stopping
 PIDFILE=${PROCESS_DIR}/logs/${MODULE_NAME}.pid
 
 # python path
 PYTHON=/usr/bin/python3.3
-
-echo $PROCESS_DIR 
-echo $PIDFILE
-exit
 
 # tools for process discovery etc.
 PGREP=/usr/bin/pgrep
@@ -82,6 +78,17 @@ status() {
 ${PGREP} -f "${MODULE_NAME} "
 }
 
+status_restart() {
+if ps aux | ${PGREP} -f ${MODULE_NAME}  > /dev/null
+then
+   echo "Running"
+else
+   echo "Starting!"
+   start
+   echo "Run started!"
+fi
+}
+
 usage() {
 echo "executable jar startup script"
 echo " "
@@ -116,6 +123,9 @@ kill_running
 ;;
 'status')
 status
+;;
+'status_restart')
+status_restart
 ;;
 'tree')
 tree
